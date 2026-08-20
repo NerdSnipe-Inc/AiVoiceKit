@@ -70,6 +70,10 @@ final class CohereProvider: TranscriptionProvider, @unchecked Sendable {
     // MARK: - TranscriptionProvider conformance
 
     func start(inputDeviceUID: String?) async throws {
+        // Microphone authorization must precede any AVAudioEngine.inputNode use (see
+        // MicrophonePermission.swift): without it, installTap crashes instead of throwing.
+        try await MicrophonePermission.ensureAuthorized()
+
         sampleBuffer.clear(keepingCapacity: true)
         _partial.send("")
 
@@ -168,6 +172,10 @@ final class CohereProvider: TranscriptionProvider, @unchecked Sendable {
     init() {}
 
     func start(inputDeviceUID: String?) async throws {
+        // Microphone authorization must precede any AVAudioEngine.inputNode use (see
+        // MicrophonePermission.swift): without it, installTap crashes instead of throwing.
+        try await MicrophonePermission.ensureAuthorized()
+
         throw NSError(
             domain: "CohereProvider",
             code: -1,

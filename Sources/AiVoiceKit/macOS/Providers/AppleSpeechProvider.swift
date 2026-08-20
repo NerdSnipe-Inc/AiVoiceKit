@@ -41,6 +41,10 @@ final class AppleSpeechProvider: TranscriptionProvider, @unchecked Sendable {
     // MARK: - TranscriptionProvider conformance
 
     func start(inputDeviceUID: String?) async throws {
+        // 0. Microphone authorization — must precede any AVAudioEngine.inputNode use (see
+        // MicrophonePermission.swift): without it, installTap crashes instead of throwing.
+        try await MicrophonePermission.ensureAuthorized()
+
         // 1. Authorization
         let status = await requestAuthorization()
         guard status == .authorized else {

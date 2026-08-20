@@ -82,6 +82,10 @@ final class ParakeetRealtimeProvider: TranscriptionProvider, @unchecked Sendable
     // MARK: - TranscriptionProvider conformance
 
     func start(inputDeviceUID: String?) async throws {
+        // Microphone authorization must precede any AVAudioEngine.inputNode use (see
+        // MicrophonePermission.swift): without it, installTap crashes instead of throwing.
+        try await MicrophonePermission.ensureAuthorized()
+
         _partial.send("")
         sampleBuffer.clear(keepingCapacity: true)
         streamedSampleCount = 0
@@ -293,6 +297,10 @@ final class ParakeetRealtimeProvider: TranscriptionProvider, @unchecked Sendable
     init(model: ASRModel) {}
 
     func start(inputDeviceUID: String?) async throws {
+        // Microphone authorization must precede any AVAudioEngine.inputNode use (see
+        // MicrophonePermission.swift): without it, installTap crashes instead of throwing.
+        try await MicrophonePermission.ensureAuthorized()
+
         throw NSError(
             domain: "ParakeetRealtimeProvider",
             code: -1,
