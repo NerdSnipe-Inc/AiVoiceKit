@@ -165,7 +165,21 @@ public final class VoiceEngineMacOS: VoiceEngine {
             .sink { [weak self] t in self?.transcript = t }
             .store(in: &cancellables)
 
-        try await provider.start(inputDeviceUID: VoiceSettingsStore.shared.settings.selectedInputDeviceUID)
+        // `state` was already flipped to `.recording` above (so the notch overlay shows
+        // immediately, no flash of nothing) — but if `provider.start` throws (denied mic/speech
+        // permission, no input device, etc.), `state` must NOT be left stuck at `.recording`
+        // forever. Without this catch, the overlay and mic icon stayed permanently "listening"
+        // while nothing was actually recording — the exact bug reported: mic shows active,
+        // nothing happens no matter how long you talk.
+        do {
+            try await provider.start(inputDeviceUID: VoiceSettingsStore.shared.settings.selectedInputDeviceUID)
+        } catch {
+            currentProvider = nil
+            cancellables.removeAll()
+            transcript = ""
+            state = .error(error.localizedDescription)
+            throw error
+        }
     }
 
     public func stopDictation() async -> String? {

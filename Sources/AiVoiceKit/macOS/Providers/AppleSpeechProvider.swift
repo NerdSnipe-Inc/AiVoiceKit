@@ -7,6 +7,7 @@ import AVFoundation
 import Combine
 import Foundation
 import Speech
+import os
 
 /// A `TranscriptionProvider` backed by Apple's `SFSpeechRecognizer`.
 ///
@@ -14,6 +15,11 @@ import Speech
 /// `SFSpeechAudioBufferRecognitionRequest` for streaming partial results.
 /// Available on macOS 10.15+.
 final class AppleSpeechProvider: TranscriptionProvider, @unchecked Sendable {
+
+    /// Routes to the unified system log (visible in Console.app / `log stream`), unlike
+    /// `DebugLogger` which is in-memory-only and off by default — needed to actually diagnose
+    /// "recording shows active but nothing transcribes" from outside the running process.
+    private static let logger = Logger(subsystem: "com.nerdsnipe.aivoicekit", category: "AppleSpeechProvider")
 
     // MARK: - TranscriptionProvider
 
@@ -58,6 +64,7 @@ final class AppleSpeechProvider: TranscriptionProvider, @unchecked Sendable {
             throw Self.makeError(code: 2, description: "SFSpeechRecognizer is not available right now.")
         }
         self.recognizer = recognizer
+        Self.logger.notice("recognizer ready: locale=\(recognizer.locale.identifier, privacy: .public) onDeviceSupported=\(recognizer.supportsOnDeviceRecognition, privacy: .public)")
 
         // 3. Audio engine
         let engine = AVAudioEngine()
@@ -73,7 +80,13 @@ final class AppleSpeechProvider: TranscriptionProvider, @unchecked Sendable {
         // 4. Recognition request
         let request = SFSpeechAudioBufferRecognitionRequest()
         request.shouldReportPartialResults = true
-        request.requiresOnDeviceRecognition = false
+        // On-device when available, not server-based: matches this app's own on-device-only
+        // positioning, and avoids a real production bug — network-based recognition returned "No
+        // speech detected" for genuine, correctly-captured microphone audio (confirmed via live
+        // buffer counts). Only forced when the recognizer actually supports it for this locale —
+        // requiring it unconditionally would make recognition fail outright on locales where
+        // on-device isn't available at all.
+        request.requiresOnDeviceRecognition = recognizer.supportsOnDeviceRecognition
         self.recognitionRequest = request
 
         accumulatedText = ""
@@ -82,7 +95,23 @@ final class AppleSpeechProvider: TranscriptionProvider, @unchecked Sendable {
 
         // 5. Microphone tap → recognition request
         let inputFormat = engine.inputNode.outputFormat(forBus: 0)
+        Self.logger.notice("inputFormat: channels=\(inputFormat.channelCount, privacy: .public) sampleRate=\(inputFormat.sampleRate, privacy: .public)")
+        var bufferCount = 0
         engine.inputNode.installTap(onBus: 0, bufferSize: 1024, format: inputFormat) { [weak self] buffer, _ in
+            bufferCount += 1
+            // Peak amplitude per buffer — distinguishes "real audio, recognizer just isn't
+            // matching it" from "silence is being captured" (wrong/muted input device), which
+            // frame count and channel count alone can't tell apart.
+            var peak: Float = 0
+            if let channelData = buffer.floatChannelData {
+                let samples = channelData[0]
+                for i in 0..<Int(buffer.frameLength) {
+                    peak = max(peak, abs(samples[i]))
+                }
+            }
+            if bufferCount <= 5 || bufferCount % 20 == 0 {
+                Self.logger.notice("tap buffer #\(bufferCount, privacy: .public) frameLength=\(buffer.frameLength, privacy: .public) peak=\(peak, privacy: .public)")
+            }
             self?.recognitionRequest?.append(buffer)
         }
 
@@ -92,6 +121,7 @@ final class AppleSpeechProvider: TranscriptionProvider, @unchecked Sendable {
 
             if let result {
                 let text = result.bestTranscription.formattedString
+                Self.logger.notice("result: len=\(text.count, privacy: .public) isFinal=\(result.isFinal, privacy: .public)")
                 self._partialTranscriptSubject.send(text)
                 self.accumulatedText = text
                 if result.isFinal {
@@ -104,6 +134,7 @@ final class AppleSpeechProvider: TranscriptionProvider, @unchecked Sendable {
                 // Domain "kAFAssistantErrorDomain" code 216 = "No speech detected"
                 // Domain "kAFAssistantErrorDomain" code 1110 = recognition task was cancelled — both are expected.
                 let isExpected = (nsError.code == 216 || nsError.code == 1110 || nsError.code == 203)
+                Self.logger.notice("callback error: domain=\(nsError.domain, privacy: .public) code=\(nsError.code, privacy: .public) expected=\(isExpected, privacy: .public) desc=\(error.localizedDescription, privacy: .public)")
                 if !isExpected {
                     DebugLogger.shared.warning("AppleSpeechProvider recognition error: \(error.localizedDescription)", source: "AppleSpeechProvider")
                 }
@@ -112,6 +143,7 @@ final class AppleSpeechProvider: TranscriptionProvider, @unchecked Sendable {
         }
 
         try engine.start()
+        Self.logger.notice("engine.start() succeeded, isRunning=\(engine.isRunning, privacy: .public)")
         DebugLogger.shared.info("AppleSpeechProvider started", source: "AppleSpeechProvider")
     }
 
