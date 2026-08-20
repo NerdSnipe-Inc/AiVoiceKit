@@ -63,7 +63,10 @@ final class ParakeetRealtimeProvider: TranscriptionProvider, @unchecked Sendable
             let capacity = AVAudioFrameCount((Double(buffer.frameLength) * ratio).rounded(.up)) + 1
             guard let out = AVAudioPCMBuffer(pcmFormat: targetFormat, frameCapacity: capacity) else { return [] }
             var err: NSError?
-            var consumed = false
+            // Synchronous, single-invocation-per-call AVAudioConverterInputBlock: the converter
+            // calls this closure once, on the calling thread, before `convert(to:error:...)`
+            // returns. It is not concurrent in practice, so the mutable flag is safe.
+            nonisolated(unsafe) var consumed = false
             conv.convert(to: out, error: &err) { _, status in
                 if consumed { status.pointee = .noDataNow; return nil }
                 consumed = true; status.pointee = .haveData; return buffer

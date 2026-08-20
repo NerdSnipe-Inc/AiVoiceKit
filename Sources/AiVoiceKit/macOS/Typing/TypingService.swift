@@ -96,7 +96,7 @@ public final class TypingService: @unchecked Sendable {
             return nil
         }
 
-        let element = unsafeBitCast(focusedElementRef, to: AXUIElement.self)
+        let element = unsafeDowncast(focusedElementRef, to: AXUIElement.self)
         var pid: pid_t = 0
         AXUIElementGetPid(element, &pid)
         guard pid > 0 else {
@@ -159,7 +159,7 @@ public final class TypingService: @unchecked Sendable {
         if let selfBundleID = Bundle.main.bundleIdentifier,
            let targetBundleID = app.bundleIdentifier,
            selfBundleID == targetBundleID { return false }
-        return app.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
+        return app.activate(options: [.activateAllWindows])
     }
 
     // MARK: - Public API
@@ -468,8 +468,8 @@ public final class TypingService: @unchecked Sendable {
                 expectedText: text,
                 timeoutMicros: restoreDelayMicros
             )
-            if pasteboard.changeCount == temporaryChangeCount || pasteboard.string(forType: .string) == text {
-                self.restorePasteboardSnapshot(snapshot, to: pasteboard)
+            if NSPasteboard.general.changeCount == temporaryChangeCount || NSPasteboard.general.string(forType: .string) == text {
+                self.restorePasteboardSnapshot(snapshot, to: NSPasteboard.general)
                 self.log("[TypingService] Restored previous clipboard snapshot")
             } else {
                 self.log("[TypingService] Skipped clipboard restore — clipboard changed externally")
@@ -500,7 +500,7 @@ public final class TypingService: @unchecked Sendable {
         let result = AXUIElementCopyAttributeValue(systemWideElement, kAXFocusedUIElementAttribute as CFString, &focusedElement)
         guard result == .success, let focusedElement else { return nil }
         guard CFGetTypeID(focusedElement) == AXUIElementGetTypeID() else { return nil }
-        return unsafeBitCast(focusedElement, to: AXUIElement.self)
+        return unsafeDowncast(focusedElement, to: AXUIElement.self)
     }
 
     private func findTextElementInFrontmostApp() -> AXUIElement? {
@@ -534,7 +534,7 @@ public final class TypingService: @unchecked Sendable {
         let result = AXUIElementCopyAttributeValue(appElement, kAXFocusedUIElementAttribute as CFString, &focusedElement)
         guard result == .success, let focusedElement else { return nil }
         guard CFGetTypeID(focusedElement) == AXUIElementGetTypeID() else { return nil }
-        return unsafeBitCast(focusedElement, to: AXUIElement.self)
+        return unsafeDowncast(focusedElement, to: AXUIElement.self)
     }
 
     private func tryAllTextInsertionMethods(_ element: AXUIElement, _ text: String) -> Bool {
@@ -558,7 +558,7 @@ public final class TypingService: @unchecked Sendable {
         let result = AXUIElementCopyAttributeValue(systemWideElement, kAXFocusedUIElementAttribute as CFString, &focusedElementRef)
         guard result == .success, let focusedElementRef else { return nil }
         guard CFGetTypeID(focusedElementRef) == AXUIElementGetTypeID() else { return nil }
-        let element = unsafeBitCast(focusedElementRef, to: AXUIElement.self)
+        let element = unsafeDowncast(focusedElementRef, to: AXUIElement.self)
         var pid: pid_t = 0
         AXUIElementGetPid(element, &pid)
         guard pid > 0 else { return nil }
@@ -578,7 +578,7 @@ public final class TypingService: @unchecked Sendable {
         guard result == .success, let axValue = value else { return nil }
         guard CFGetTypeID(axValue) == AXValueGetTypeID() else { return nil }
         var range = CFRange()
-        let ok = AXValueGetValue(unsafeBitCast(axValue, to: AXValue.self), .cfRange, &range)
+        let ok = AXValueGetValue(unsafeDowncast(axValue, to: AXValue.self), .cfRange, &range)
         return ok ? range : nil
     }
 
@@ -774,7 +774,7 @@ public final class TypingService: @unchecked Sendable {
         let result = AXUIElementCopyAttributeValue(element, attribute, &value)
         guard result == .success, let value else { return nil }
         guard CFGetTypeID(value) == AXUIElementGetTypeID() else { return nil }
-        return unsafeBitCast(value, to: AXUIElement.self)
+        return unsafeDowncast(value, to: AXUIElement.self)
     }
 
     private static func isCurrentlyFocusedElement(_ expectedElement: AXUIElement, expectedPID: pid_t) -> Bool {
@@ -784,7 +784,7 @@ public final class TypingService: @unchecked Sendable {
             systemWideElement, kAXFocusedUIElementAttribute as CFString, &focusedElementRef)
         guard result == .success, let focusedElementRef else { return false }
         guard CFGetTypeID(focusedElementRef) == AXUIElementGetTypeID() else { return false }
-        let currentElement = unsafeBitCast(focusedElementRef, to: AXUIElement.self)
+        let currentElement = unsafeDowncast(focusedElementRef, to: AXUIElement.self)
         if CFEqual(currentElement, expectedElement) { return true }
         var currentPID: pid_t = 0
         AXUIElementGetPid(currentElement, &currentPID)

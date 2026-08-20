@@ -1,6 +1,6 @@
 // Sources/AiVoiceKit/macOS/Persistence/MeetingTranscriptionService.swift
 #if os(macOS)
-import AVFoundation
+@preconcurrency import AVFoundation
 import CoreMedia
 import Foundation
 import UniformTypeIdentifiers
@@ -187,7 +187,7 @@ public final class MeetingTranscriptionService: ObservableObject {
             self.currentStatus = "Analyzing audio file..."
             self.progress = 0.2
 
-            let asset = AVAsset(url: fileURL)
+            let asset = AVURLAsset(url: fileURL)
             let duration: Double
             do {
                 let cmDuration = try await asset.load(.duration)
@@ -435,7 +435,10 @@ public final class MeetingTranscriptionService: ObservableObject {
         }
 
         var conversionError: NSError?
-        var inputConsumed = false
+        // Synchronous, single-invocation-per-call AVAudioConverterInputBlock: the converter
+        // calls this closure once, on the calling thread, before `convert(to:error:...)`
+        // returns. It is not concurrent in practice, so the mutable flag is safe.
+        nonisolated(unsafe) var inputConsumed = false
 
         converter.convert(to: outputBuffer, error: &conversionError) { _, outStatus in
             if inputConsumed {
