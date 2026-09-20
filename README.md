@@ -36,7 +36,7 @@ let voiceEngine = VoiceEngineMacOS(
 AiVoiceKit's dictation and voice-command flow is used end-to-end in **AICompleteChat**, a
 full-source, production-quality on-device AI chat app built on
 [DesignFoundation](https://github.com/NerdSnipe-Inc/design-foundation) and
-[DesignFoundationPro](https://github.com/NerdSnipe-Inc/DesignFoundationPro) — NerdSnipe Inc's
+[DesignFoundationPro](https://nerdsnipe.cc/design-foundation-pro) — NerdSnipe Inc's
 Swift design-system packages. DesignFoundation is the free, MIT-licensed core (tokens, primitives,
 layout shells); DesignFoundationPro builds on it with complete, drop-in application verticals
 (chat, CRM, project management, analytics, and more) so a real app's UI is assembled from proven
