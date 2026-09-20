@@ -1,5 +1,14 @@
 # AiVoiceKit
 
+![Swift 6.0](https://img.shields.io/badge/Swift-6.0-orange?logo=swift)
+![iOS 18+](https://img.shields.io/badge/iOS-18%2B-blue?logo=apple)
+![macOS 15+](https://img.shields.io/badge/macOS-15%2B-blue?logo=apple)
+![visionOS 2+](https://img.shields.io/badge/visionOS-2%2B-blue?logo=apple)
+![GPLv3 License](https://img.shields.io/badge/license-GPLv3-blue)
+![SPM](https://img.shields.io/badge/SPM-compatible-brightgreen)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FNerdSnipe-Inc%2FAiVoiceKit%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/NerdSnipe-Inc/AiVoiceKit)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FNerdSnipe-Inc%2FAiVoiceKit%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/NerdSnipe-Inc/AiVoiceKit)
+
 A Swift package providing on-device voice dictation, command routing, and AI-assisted rewriting for macOS (iOS/visionOS platform stubs included for future work).
 
 Originally ported from [FluidVoice](https://github.com/altic-dev/FluidVoice) by Aether AI Studio / altic-dev, and adapted for use as a standalone, host-app-agnostic package. AiVoiceKit has no dependency on Alric or any other host application — the host wires it up via a plain callback-based `VoiceEngine` protocol.
