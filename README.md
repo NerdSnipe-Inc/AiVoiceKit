@@ -13,6 +13,10 @@ A Swift package providing on-device voice dictation, command routing, and AI-ass
 
 Originally ported from [FluidVoice](https://github.com/altic-dev/FluidVoice) by Aether AI Studio / altic-dev, and adapted for use as a standalone, host-app-agnostic package. AiVoiceKit has no dependency on Alric or any other host application — the host wires it up via a plain callback-based `VoiceEngine` protocol.
 
+[![Sponsor NerdSnipe-Inc](https://img.shields.io/badge/Sponsor-NerdSnipe--Inc-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/NerdSnipe-Inc)
+
+> AiVoiceKit is free and open source. If it saved you time, [sponsoring NerdSnipe Inc](https://github.com/sponsors/NerdSnipe-Inc) pays for the maintenance, bug fixes and new releases that keep it working.
+
 ## Install
 
 ```swift
@@ -41,7 +45,7 @@ that include the APIs this package needs.
 
 - **Local ASR** via Apple's built-in `SFSpeechRecognizer`/`SpeechAnalyzer` (zero download), or downloadable on-device models: Whisper (Tiny–Large via [SwiftWhisper](https://github.com/exPHAT/SwiftWhisper)), Parakeet Flash/TDT v2/v3, Nemotron Speech, and Cohere Transcribe (all via [FluidAudio](https://github.com/altic-dev/FluidAudio), CoreML, arm64 macOS)
 - **Global hotkey activation** — hold-to-record, toggle, or double-tap, with configurable shortcuts for dictation, command mode, edit mode, cancel, and paste-last-transcription
-- **Command routing** — text prefixed with the wake word `"Alric"` (e.g. `"Alric, summarize this"`) is routed to a host-supplied callback instead of being typed into the frontmost app. The wake word is currently fixed in `CommandModeRouter`, not configurable per host app.
+- **Command routing** — text prefixed with the wake word `"Alric"` or `"Hey Alric"` (e.g. `"Alric, summarize this"`; a comma, period or space may follow the name) is routed to a host-supplied callback instead of being typed into the frontmost app. The wake word is currently fixed in `CommandModeRouter`, not configurable per host app.
 - **Edit mode** — rewrite selected text in the frontmost app via a host-supplied AI callback
 - **Notch/bottom overlay** — live transcript, waveform, and mode indicator via [DynamicNotchKit](https://github.com/altic-dev/DynamicNotchKit)
 - **History, stats, and custom dictionary** persistence, file-based (no external database)
@@ -108,3 +112,10 @@ Third-party dependencies and their licenses are listed in-app via the Open Sourc
 | [SwiftWhisper](https://github.com/exPHAT/SwiftWhisper) | MIT | Whisper inference |
 | [DynamicNotchKit](https://github.com/altic-dev/DynamicNotchKit) | MIT | Notch overlay window management |
 | [PromiseKit](https://github.com/mxcl/PromiseKit) | MIT | Legacy async utilities (updater path) |
+
+## Support this project
+
+AiVoiceKit is built and maintained by [NerdSnipe Inc](https://nerdsnipe.cc), a small independent studio in Ottawa. Sponsorship funds new ASR model support.
+
+- [Sponsor on GitHub](https://github.com/sponsors/NerdSnipe-Inc), from $5/month or a one-time amount
+- [More about what we fund](https://nerdsnipe.cc/sponsor)
